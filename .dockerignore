@@ -1,0 +1,7 @@
+build/
+data/
+node_modules/
+__pycache__/
+*.o
+*.a
+.git/

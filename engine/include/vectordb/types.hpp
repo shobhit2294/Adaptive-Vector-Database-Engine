@@ -100,6 +100,7 @@ struct SegmentTelemetry {
     double write_freq_ewma = 0.0;
     double utility_score = 0.0;
     uint64_t last_access_tick = 0;
+    uint64_t last_hit_tick = 0;
     uint64_t last_transition_tick = 0;
     uint64_t ram_bytes_vectors = 0;
     uint64_t ram_bytes_hnsw = 0;

@@ -1,0 +1,46 @@
+{
+  "vectors_ingested": 4000,
+  "ingest_seconds": 1.846,
+  "full_ram_bytes": 3338496,
+  "tight_budget_bytes": 1836172,
+  "phase_a": {
+    "mean_recall_at_10": 0.99,
+    "adapted_recall_at_10": 1.0,
+    "p50_ms": 3.374761000259241,
+    "p95_ms": 5.363269250074154,
+    "tiers": {
+      "cold_disk_pq": 11,
+      "hot_ram": 6,
+      "memtable": 1,
+      "warm_mmap": 0
+    },
+    "ram_total_bytes": 1750756
+  },
+  "phase_b_after_shift": {
+    "mean_recall_at_10": 1.0,
+    "adapted_recall_at_10": 1.0,
+    "p50_ms": 3.357126499849983,
+    "p95_ms": 5.428409599835502,
+    "tiers": {
+      "cold_disk_pq": 11,
+      "hot_ram": 6,
+      "memtable": 1,
+      "warm_mmap": 0
+    },
+    "ram_total_bytes": 1758052,
+    "promotions": 7,
+    "demotions": 14
+  },
+  "hybrid_tight": {
+    "plan": "prefilter_allowlist",
+    "selectivity": 0.00741839762611276,
+    "results_count": 10,
+    "total_ms": 50.912844000034966
+  },
+  "hybrid_broad": {
+    "plan": "adaptive_postfilter",
+    "selectivity": 0.4765084075173096,
+    "results_count": 10,
+    "total_ms": 6.97139399999287
+  }
+}

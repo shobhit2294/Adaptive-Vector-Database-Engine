@@ -1,0 +1,118 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vectordb-postgres
+    environment:
+      POSTGRES_USER: vectordb
+      POSTGRES_PASSWORD: vectordb
+      POSTGRES_DB: vectordb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vectordb -d vectordb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  vectordb-engine:
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
+    container_name: vectordb-engine
+    environment:
+      VECTORDB_PORT: "8080"
+      VECTORDB_DATA_DIR: "/data/vectordb"
+      VECTORDB_DIM: "64"
+      VECTORDB_METRIC: "cosine"
+      VECTORDB_SEG_CAP: "500"
+      VECTORDB_RAM_BUDGET_MB: "4"
+      VECTORDB_DISK_CACHE_MB: "2"
+      VECTORDB_PQ_SUBSPACES: "16"
+      VECTORDB_WAHI_MODE: "wahi_adaptive"
+      VECTORDB_WAHI_INTERVAL: "50"
+      VECTORDB_WAL_FSYNC: "batched"
+      VECTORDB_THREADS: "8"
+    mem_limit: 512m
+    ports:
+      - "8080:8080"
+    volumes:
+      - engine_data:/data/vectordb
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api-server:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: vectordb-api
+    environment:
+      API_PORT: "3000"
+      ENGINE_URL: "http://vectordb-engine:8080"
+      DATABASE_URL: "postgresql://vectordb:vectordb@postgres:5432/vectordb"
+      PREFILTER_MAX_ROWS: "2500"
+      PREFILTER_MAX_SELECTIVITY: "0.08"
+      POSTFILTER_MAX_EXPAND: "20"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      vectordb-engine:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: vectordb-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - vectordb-engine
+      - api-server
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: vectordb-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
+  benchmark:
+    build:
+      context: ./benchmarks
+      dockerfile: Dockerfile
+    container_name: vectordb-benchmark
+    profiles: ["bench"]
+    environment:
+      API_URL: "http://api-server:3000"
+      ENGINE_URL: "http://vectordb-engine:8080"
+      VECTORDB_DIM: "64"
+      BENCH_OUT: "/results/e2e_benchmark.json"
+    volumes:
+      - ./benchmarks/results:/results
+    depends_on:
+      api-server:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  engine_data:

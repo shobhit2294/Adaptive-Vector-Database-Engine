@@ -1,0 +1,98 @@
+{
+  "id": null,
+  "uid": "wahi-vectordb-overview",
+  "title": "Adaptive VectorDB (WAHI) Telemetry",
+  "tags": ["vectordb", "wahi", "hnsw", "pq"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Live Vectors & Tombstones",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "vectordb_vectors_total", "legendFormat": "Live Vectors" },
+        { "expr": "vectordb_tombstones_total", "legendFormat": "Tombstones" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Segment Tier Distribution",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 9, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "vectordb_segments_count{tier=\"hot_ram\"}", "legendFormat": "HOT RAM (HNSW)" },
+        { "expr": "vectordb_segments_count{tier=\"warm_mmap\"}", "legendFormat": "WARM MMAP (HNSW)" },
+        { "expr": "vectordb_segments_count{tier=\"cold_disk_pq\"}", "legendFormat": "COLD DISK (PQ)" },
+        { "expr": "vectordb_segments_count{tier=\"memtable\"}", "legendFormat": "Memtable" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Tracked RAM vs WAHI Budget (Bytes)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 0 },
+      "targets": [
+        { "expr": "vectordb_ram_bytes{component=\"total\"}", "legendFormat": "Total RAM" },
+        { "expr": "vectordb_ram_budget_bytes", "legendFormat": "RAM Budget" },
+        { "expr": "vectordb_ram_bytes{component=\"vectors\"}", "legendFormat": "Vectors RAM" },
+        { "expr": "vectordb_ram_bytes{component=\"hnsw\"}", "legendFormat": "HNSW Graph RAM" },
+        { "expr": "vectordb_ram_bytes{component=\"pq\"}", "legendFormat": "PQ Codes RAM" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Engine Search Latency Quantiles (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 6 },
+      "targets": [
+        { "expr": "vectordb_search_latency_quantile_ms{quantile=\"0.5\"}", "legendFormat": "p50" },
+        { "expr": "vectordb_search_latency_quantile_ms{quantile=\"0.95\"}", "legendFormat": "p95" },
+        { "expr": "vectordb_search_latency_quantile_ms{quantile=\"0.99\"}", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "WAHI Promotions & Demotions (Total)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 6 },
+      "targets": [
+        { "expr": "vectordb_wahi_transitions_total{direction=\"promote\"}", "legendFormat": "Promotions" },
+        { "expr": "vectordb_wahi_transitions_total{direction=\"demote\"}", "legendFormat": "Demotions" },
+        { "expr": "vectordb_compactions_total", "legendFormat": "Compactions" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Cold Disk Reads & Cache Efficiency",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 6 },
+      "targets": [
+        { "expr": "rate(vectordb_disk_reads_total[30s])", "legendFormat": "Disk Reads/s" },
+        { "expr": "rate(vectordb_cache_hits_total[30s])", "legendFormat": "Cache Hits/s" },
+        { "expr": "rate(vectordb_cache_misses_total[30s])", "legendFormat": "Cache Misses/s" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Node.js Hybrid Query Optimizer Plans",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        { "expr": "rate(api_optimizer_plan_total[1m])", "legendFormat": "{{plan}}" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Query Throughput (QPS)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        { "expr": "rate(vectordb_queries_total[30s])", "legendFormat": "{{mode}}" }
+      ]
+    }
+  ]
+}
